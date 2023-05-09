@@ -5,7 +5,6 @@ from contextlib import closing
 import os
 from flask import Flask, render_template, request, send_file
 import sys
-import subprocess
 from tempfile import gettempdir
 
 polly = boto3.client('polly')
