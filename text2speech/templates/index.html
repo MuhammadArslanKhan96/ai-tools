@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text2speech</title>
+  </head>
+  <body>
+    <select onChange="handleSelectLanguage()">
+      <option value="en-US">English US</option>
+      <option value="en-IN">English IN</option>
+      <option value="es-MX">English MX</option>
+      <option value="en-ZA">English ZA</option>
+      <option value="tr-TR">Tr</option>
+      <option value="ru-RU">Russian</option>
+      <option value="ro-RO">Russian2</option>
+      <option value="pt-PT">pt-PT</option>
+      <option value="pl-PL">pl-PL</option>
+      <option value="nl-NL">nl-NL</option>
+      <option value="it-IT">it-IT</option>
+      <option value="is-IS">is-IS</option>
+      <option value="fr-FR">fr-FR</option>
+      <option value="es-ES">es-ES</option>
+    </select>
+
+    <select onChange="handleUserChange()">
+      <option value="Kevin">Kevin (Male)</option>
+      <option value="Salli">Salli (Female)</option>
+      <option value="Matthew">Matthew (Male)</option>
+      <option value="Kimberly">Kimberly (Female)</option>
+      <option value="Kendra">Kendra (Female)</option>
+      <option value="Justin">Justin (Male)</option>
+      <option value="Joey">Joey (Male)</option>
+      <option value="Joanna">Joanna (Female)</option>
+      <option value="Ivy">Ivy (Female)</option>
+      <option value="Ruth">Ruth (Female)</option>
+      <option value="Stephen">Stephen (Male)</option>
+    </select>
+
+    <input type="text" onChange="inputChange()" />
+    <button onClick="handleClick()">Generate</button>
+
+    <script>
+      let data = [];
+      let text = "";
+      let voice = "Kevin";
+
+      function handleSelectLanguage() {
+        const select = document.getElementsByTagName("select")[0].value;
+        fetch(`/languages`, {
+          method: "POST", // *GET, POST, PUT, DELETE, etc.
+          headers: {
+            "Content-Type": "application/json",
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: JSON.stringify({
+            language: select,
+          }), // body data type must match "Content-Type" header
+        })
+          .then(async function res(res) {
+            data = await res.json();
+          })
+          .catch((e) => console.error(e));
+
+        setTimeout(function timeoutHandler() {
+          let arr = [];
+          //when the document is finished loading, replace everything
+          //between the <a ...> </a> tags with the value of splitText
+          //console.log(
+          //  data.Voices.filter(function filter(i) {
+          //    return i.SupportedEngines.includes("neural");
+          //  });
+
+          // );
+if(data.Voices) {
+
+          for (let i = 0; i < data.Voices.length; i++) {
+            if (data.Voices[i].SupportedEngines.includes("neural")) {
+              arr.push(data.Voices[i]);
+            }
+          }
+
+}
+          let filteredData = arr
+            .map((item) => {
+              return `<option value='${item.Id}'>${item.Name} (${item.Gender})</option>`;
+            })
+            .join("");
+
+          document.getElementsByTagName("select")[1].innerHTML = filteredData;
+        }, 1000);
+      }
+
+      function handleUserChange() {
+        const select = document.getElementsByTagName("select")[1].value;
+        console.log(select);
+        voice = select;
+      }
+
+      function inputChange() {
+        const input = document.getElementsByTagName("input")[0].value;
+        console.log(input);
+        text = input;
+      }
+
+      function handleClick() {
+        console.log(text, voice);
+        if (text == "") return;
+        else {
+          fetch(`/generateaudio`, {
+            method: "POST", // *GET, POST, PUT, DELETE, etc.
+            headers: {
+              "Content-Type": "application/json",
+              // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: JSON.stringify({
+              text,
+              voice,
+            }), // body data type must match "Content-Type" header
+          })
+            .then(async function res(res) {
+              data = await res.blob();
+              // console.log(await res.blob())
+            })
+            .catch((e) => console.error(e));
+
+          setTimeout(function timeoutHandler() {
+            let audio = document.createElement("audio");
+            const sourceTag = document.createElement("source");
+            audio.autoplay = true;
+            sourceTag.src = URL.createObjectURL(data)
+            sourceTag.type = data.type
+            audio.appendChild(sourceTag)
+            document.appendChild(audio);
+          }, 1500);
+        }
+      }
+    </script>
+  </body>
+</html>
